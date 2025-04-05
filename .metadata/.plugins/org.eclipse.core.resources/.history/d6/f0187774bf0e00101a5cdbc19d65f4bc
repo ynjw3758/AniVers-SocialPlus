@@ -1,0 +1,63 @@
+package com.AniVerse.Reaction.controller;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.AniVerse.Reaction.services.Common_Services;
+
+@CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*")
+@RestController
+@RequestMapping("/Pets-social")
+public class Controller {
+	
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
+	
+	@Autowired
+	private Common_Services common;
+	
+	@PostMapping("/Hear/likes")
+	public ResponseEntity<Map<String, Object>>Hear_likes(@RequestBody Map<String, Object> infos){
+		Map<String, Object> result= new HashMap<String, Object>();
+		result = common.LikeHeart(infos);
+		
+		return ResponseEntity.status(HttpStatus.OK).body(result);
+	}
+	
+	@PostMapping("/comment/Create")
+	ResponseEntity<Map<String, Object>>Create_Comment(){
+		Map<String, Object> result= new HashMap<String, Object>();
+		
+		return ResponseEntity.status(HttpStatus.OK).body(result);
+	}
+	
+	@PostMapping("/comment/Edit")
+	ResponseEntity<Map<String, Object>>Edit_Comment(){
+		Map<String, Object> result= new HashMap<String, Object>();
+		
+		return ResponseEntity.status(HttpStatus.OK).body(result);
+	}
+	
+	@PostMapping("/comment/Delete")
+	ResponseEntity<Map<String, Object>>Delete_Comment(){
+		Map<String, Object> result= new HashMap<String, Object>();
+		
+		return ResponseEntity.status(HttpStatus.OK).body(result);
+	}
+	
+	
+	
+	
+	
+
+}

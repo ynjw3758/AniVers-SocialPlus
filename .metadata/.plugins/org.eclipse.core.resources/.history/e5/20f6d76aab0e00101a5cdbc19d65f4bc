@@ -1,0 +1,18 @@
+package com.AniVerse.Reaction.mongo;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class Commnent {
+	
+	
+	public void save_comments() {
+		
+	}
+	
+	public void delete_comments() {
+		
+	}
+	
+
+}

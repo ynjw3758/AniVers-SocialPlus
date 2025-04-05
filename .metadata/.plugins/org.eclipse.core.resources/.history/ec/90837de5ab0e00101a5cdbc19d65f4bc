@@ -1,0 +1,8 @@
+package com.AniVerse.Reaction.redis;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class Heart {
+
+}

@@ -1,0 +1,52 @@
+package com.AniVerse.Reaction.redis;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.AniVerse.Reaction.mapper.Heart_mapper;
+
+import org.springframework.data.redis.core.RedisTemplate;
+
+
+@Service
+public class Heart {
+	
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
+	
+	private static final String POST_LIKE_SET_PREFIX = "post:likes:";        // SET(userId)
+	private static final String POST_LIKE_COUNT_PREFIX = "post:likecount:";  // INT
+	
+	@Autowired
+	private RedisTemplate<String, Object> redisTemplate;
+	
+	@Autowired
+	private Heart_mapper heart_mapper;
+	
+	
+	public boolean Toggle_Heart(String id, String content_id) {
+		boolean isexist=false;
+	    String likeSetKey = POST_LIKE_SET_PREFIX + content_id;
+	    String countKey = POST_LIKE_COUNT_PREFIX + content_id;
+	    
+	    Boolean alreadyLiked = redisTemplate.opsForSet().isMember(likeSetKey, id);
+	    
+	    if(Boolean.TRUE.equals(alreadyLiked)) {
+	    	   redisTemplate.opsForSet().remove(likeSetKey, id);
+	           redisTemplate.opsForValue().decrement(countKey);
+	           heart_mapper.increate_heart(null);
+	           //likeRepository.deleteByContentIdAndUserId(content_id, id);
+	           return false; 
+	    }else {
+	        redisTemplate.opsForSet().add(likeSetKey, id);
+	        redisTemplate.opsForValue().increment(countKey);
+	        //likeMapper.insertLike(contentId, userId);
+	        return true;
+	    }
+		
+		
+		return isexist;
+	}
+
+}

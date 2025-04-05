@@ -1,0 +1,12 @@
+spring.application.name=ReactionService
+server.port=8090
+
+
+spring.data.mongodb.uri=mongodb://127.0.0.1:27017
+spring.data.mongodb.database = Comment
+
+#Redis
+spring.redis.host =localhost
+spring.redis.port=6379
+spring.cache.type:redis
+spring.redis.database=3

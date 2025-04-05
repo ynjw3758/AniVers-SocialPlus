@@ -1,0 +1,5 @@
+package com.AniVerse.Reaction.config;
+
+public class Psql {
+
+}

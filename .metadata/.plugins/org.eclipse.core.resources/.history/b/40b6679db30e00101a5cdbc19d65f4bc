@@ -1,0 +1,8 @@
+package com.AniVerse.Reaction.mapper;
+
+
+@Mapper
+@Repository
+public interface Heart {
+
+}

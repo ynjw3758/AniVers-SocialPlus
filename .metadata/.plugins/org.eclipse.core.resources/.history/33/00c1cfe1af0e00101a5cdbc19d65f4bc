@@ -1,0 +1,32 @@
+package com.AniVerse.Reaction.services;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.AniVerse.Reaction.mongo.Comment;
+import com.AniVerse.Reaction.redis.Heart;
+
+@Service
+public class Common_Services {
+	
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
+	
+	@Autowired
+	private Comment comment;
+	
+	@Autowired
+	private Heart heart;
+	
+	
+	
+	public void LikeHeart() {
+		
+	}
+	
+	public void Create_Comment() {
+		
+	}
+
+}

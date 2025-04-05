@@ -1,0 +1,18 @@
+package com.AniVerse.Reaction.services;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class Common_Services {
+	
+	
+	
+	public void LikeHeart() {
+		
+	}
+	
+	public void Create_Comment() {
+		
+	}
+
+}
