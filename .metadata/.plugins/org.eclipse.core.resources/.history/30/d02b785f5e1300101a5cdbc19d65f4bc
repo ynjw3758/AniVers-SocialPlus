@@ -1,0 +1,33 @@
+package com.AniVerse.Reaction.mongo;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.stereotype.Service;
+
+@Service
+public class Comment {
+	
+	
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
+	
+	@Autowired
+	private MongoTemplate mongo_template;
+	
+	
+	
+	public void save_comments() {
+		
+	}
+	
+	public void delete_comments() {
+		
+	}
+	
+	public void update_Heart() {
+		
+	}
+	
+
+}

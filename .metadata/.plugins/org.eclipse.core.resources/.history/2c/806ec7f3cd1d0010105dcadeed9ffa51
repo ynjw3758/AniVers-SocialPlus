@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.AniVerse.Reaction.mapper.Common_mapper">
+
+<select id="Duple_Heart" parameterType="String" resultType="boolean">
+   select EXISTS (select 1 from
+   likes where
+   user_id=#{Id} limit 1);
+</select>
+
+<insert id="insert_heart" parameterType="java.util.HashMap">
+insert into likes(content_id ,user_id ,profile_img) 
+values(#{Contentid}, #{Id},#{ProfileImg});
+</insert>
+
+<insert id="Insert_Content" parameterType="java.util.HashMap">
+insert into contentinfo(contentid, create_date) values(#{contentid} ,#{insert_date});
+</insert>
+
+<insert id="Insert_Userinfo" parameterType="java.util.HashMap">
+insert into userinfo(profile, userid, nickname) values(#{profile}, #{UserId}, #{nickname});
+</insert>
+<insert id="save_contentowner_info" parameterType="java.util.HashMap">
+insert into contentowner(contentid, owner_id, owner_text)
+values(#{contentId}, #{Id}, #{text})
+</insert>
+
+<select id ="ExistUser" parameterType="String" resultType="boolean">
+SELECT EXISTS (
+    SELECT 1
+    FROM userinfo 
+    WHERE userid = #{UserId}
+);
+</select>
+
+<select id ="ExistContent" parameterType="String" resultType="boolean">
+SELECT EXISTS (
+    SELECT 1
+    FROM ContentInfo 
+    WHERE contentId = #{ContentId}
+);
+</select>
+
+<insert id="Insert_Comment" parameterType="java.util.HashMap">
+insert into comments(contentid, commentid, parentkey, uniquekey, comment_text, userid, insert_date)
+values(#{contentid} ,#{CommentId}, #{parnetkey}, #{uniqueKey} ,#{Comments}, #{UserId} ,#{insert_date})
+</insert>
+
+<delete id="delete_heart">
+  DELETE FROM likes
+  WHERE content_id = #{Contentid} AND user_id = #{Id}
+</delete>
+
+<update id="increase_comments" parameterType="String">
+UPDATE contentinfo
+SET comment_cnt = comment_cnt + 1
+WHERE contentid = #{ContentId};
+</update>
+
+<update id="decrease_comments" parameterType="java.util.HashMap">
+UPDATE contentinfo
+SET comment_cnt = comment_cnt - 1
+WHERE contentid = #{contentid};
+</update>
+
+</mapper>

@@ -1,0 +1,85 @@
+package com.AniVerse.Reaction.services;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.AniVerse.Reaction.mapper.Common_mapper;
+
+import jakarta.transaction.Transactional;
+
+@Service
+public class Comment_Services {
+	
+	
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
+	
+	@Autowired
+	private Common_mapper common_mapper;
+	
+	@Autowired
+	private Generation_Services generation;
+	
+	@Transactional
+	public void Insert_Comment(Map<String, Object> info) {
+		boolean isExsitContent =false;
+		boolean isExsitUser =false;
+		isExsitContent =common_mapper.ExistContent(info.get("contentid").toString());
+		isExsitUser = common_mapper.ExistUser(info.get("UserId").toString());
+		if(!isExsitContent && !isExsitUser) {
+			logger.info("둘다 없다");
+			common_mapper.Insert_Content(info.get("contentid").toString());
+			common_mapper.Insert_Userinfo(info);
+			common_mapper.Insert_Comment(info);
+		}
+		else if(isExsitContent && !isExsitUser) {
+			logger.info("신규 유저 댓글");
+			common_mapper.Insert_Userinfo(info);
+			common_mapper.Insert_Comment(info);
+		}
+		else if(!isExsitContent && isExsitUser) {
+			logger.info("기존 고객");
+			common_mapper.Insert_Content(info.get("contentid").toString());
+			common_mapper.Insert_Comment(info);
+		}
+		else if(isExsitContent && isExsitUser) {
+			logger.info("둘다 존재");
+			common_mapper.Insert_Comment(info);
+		}
+		
+		
+	}
+	
+	public Map<String, Object> Create_Comment(Map<String, Object> info) {
+		Map<String, Object> result_data =new HashMap<String, Object>();
+		logger.info("댓글 저장");
+		String commentid = generation.Generation_uuid();
+		String uniquekey = generation.Generation_uuid();
+		info.put("CommentId", commentid);
+		info.put("parnetkey", commentid);
+		info.put("uniqueKey", uniquekey);
+		logger.info("요청 데이터 정리 :" + info);
+		Insert_Comment(info); //댓글 저장하기
+		
+		
+		
+		return result_data;
+	}
+	
+	public Map<String, Object> Edit_Comment() {
+		Map<String, Object> result_data =new HashMap<String, Object>();
+		
+		return result_data;
+	}
+	
+	public Map<String, Object> Delete_Comment() {
+		Map<String, Object> result_data =new HashMap<String, Object>();
+		
+		return result_data;
+	}
+
+}

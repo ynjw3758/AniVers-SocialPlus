@@ -1,0 +1,54 @@
+package com.AniVerse.Reaction.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.springframework.stereotype.Repository;
+
+@Mapper
+@Repository
+public interface Common_mapper {
+	
+	public void insert_heart(Map<String, Object> infos); //좋아요 증가(게시물)
+	
+	public void delete_heart(Map<String, Object> infos); //좋아요 감소(게시물)
+	
+	public void cm_delete_like(Map<String, Object> infos); //댓글 좋아요 삭제
+	
+	public void cm_insert_like(Map<String, Object> infos); //댓글 좋아요 추가
+	
+	public void Heart_user();
+	
+	public boolean Duple_Heart(String Id); //현재 좋아요를 누른 상태인지 아닌지 확인
+	
+	public void Insert_Comment(Map<String, Object> info);//댓글 달기
+	
+	public void Insert_Content(Map<String, Object> info);//게시물 추가(댓글이 처음 달릴때 insert)
+	
+    public void Insert_Userinfo(Map<String, Object> info);//사용자가 처음 댓글을 달 때 insert
+	
+	public boolean ExistContent(String ContentId); //현재 댓글이 한 개라도 있으면 중복 처리
+	
+	public boolean ExistUser(String UserId);//댓글을 한 번이라도 단 사람인지 체크
+	
+	public boolean ExistLike(Map<String, Object> info);
+	
+	public void increase_comments(String ContentId); //댓글 카운트 증가
+	
+	public void decrease_comments(Map<String, Object> info); //댓글 카운트 감소
+	
+	public void save_contentowner_info(Map<String, Object> info); // 게시물 소개글 저장
+	
+	public String getOwner_text(Map<String, Object> info); //게시물 소개글 조회
+	
+	public void insert_commentinfo(String CommentId); //root 댓글 넣기
+	
+	public List<Map<String, Object>> getroot_AllComment(Map<String, Object> info);//게시물 최초 댓글 리스트 가져오기
+	
+	//public boolean islike(Map<String, Object> info); //좋아요 or 싫어요 누른 상태
+
+	
+
+
+}

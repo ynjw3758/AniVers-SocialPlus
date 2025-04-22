@@ -8,7 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.AniVerse.Reaction.mapper.Heart_mapper;
+import com.AniVerse.Reaction.mapper.Common_mapper;
+import com.AniVerse.Reaction.mongo.Heart_Query;
 
 import org.springframework.data.redis.core.RedisTemplate;
 
@@ -25,7 +26,10 @@ public class Heart {
 	private RedisTemplate<String, Object> redisTemplate;
 	
 	@Autowired
-	private Heart_mapper heart_mapper;
+	private Common_mapper heart_mapper;
+	
+	@Autowired
+	private Heart_Query Mongo;
 	
 	
 	public Map<String, Object> Toggle_Heart(Map<String ,Object> infos) {
@@ -45,10 +49,11 @@ public class Heart {
 			    	   redisTemplate.opsForSet().remove(likeSetKey, User_id);
 			           redisTemplate.opsForValue().decrement(countKey);
 		    	        int updatedCount = (int) redisTemplate.opsForValue().get(countKey);
-				           heart_mapper.insert_heart(infos);
-				           result.put("count", updatedCount);
-				           result.put("liked", false);
-	    	        heart_mapper.delete_heart(infos);
+	    	            heart_mapper.delete_heart(infos); //psql 사용자 데이터 삭제
+	    	        
+			           result.put("count", updatedCount);
+			           result.put("liked", false);
+	    	           Mongo.decreate_Heart(content_id, User_id); //mongodb 카운트 감소
 	    	        return result;
 	    		}
 	    		else {
@@ -57,6 +62,8 @@ public class Heart {
 	    	        redisTemplate.opsForValue().increment(countKey);
 	    	        int updatedCount = (int) redisTemplate.opsForValue().get(countKey);
 			           heart_mapper.insert_heart(infos);
+			           Mongo.increate_Heart(content_id, User_id);
+			           
 			           result.put("count", updatedCount);
 			           result.put("liked", true);
 			           return result;

@@ -1,0 +1,36 @@
+package com.AniVerse.Reaction.services;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+@Service
+public class Commnet_Services {
+	
+	
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
+	
+	
+	public Map<String, Object> Create_Comment() {
+		
+		Map<String, Object> result_data =new HashMap<String, Object>();
+		
+		return result_data;
+	}
+	
+	public Map<String, Object> Edit_Comment() {
+		Map<String, Object> result_data =new HashMap<String, Object>();
+		
+		return result_data;
+	}
+	
+	public Map<String, Object> Delete_Comment() {
+		Map<String, Object> result_data =new HashMap<String, Object>();
+		
+		return result_data;
+	}
+
+}

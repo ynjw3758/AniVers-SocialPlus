@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.AniVerse.Reaction.mapper.Heart_mapper">
+
+<select id="Duple_Heart" parameterType="String" resultType="boolean">
+   select EXISTS (select 1 from
+   likes where
+   user_id=#{Id} limit 1);
+</select>
+
+<insert id="insert_heart" parameterType="java.util.HashMap">
+insert into likes(content_id ,user_id ,profile_img) 
+values(#{Contentid}, #{Id},#{ProfileImg});
+</insert>
+
+<delete id="delete_heart">
+  DELETE FROM likes
+  WHERE content_id = #{Contentid} AND user_id = #{Id}
+</delete>
+
+</mapper>

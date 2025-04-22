@@ -1,0 +1,20 @@
+package com.AniVerse.Reaction.mapper;
+
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.springframework.stereotype.Repository;
+
+@Mapper
+@Repository
+public interface Heart_mapper {
+	
+	public void insert_heart(Map<String, Object> infos);
+	
+	public void delete_heart(Map<String, Object> infos);
+	
+	public void Heart_user();
+	
+	public boolean Duple_Heart(String Id);
+
+}
