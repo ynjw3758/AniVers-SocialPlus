@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.AniVerse.Reaction.mapper.Common_mapper">
+
+<select id="Duple_Heart" parameterType="String" resultType="boolean">
+   select EXISTS (select 1 from
+   likes where
+   user_id=#{Id} limit 1);
+</select>
+
+<insert id="insert_heart" parameterType="java.util.HashMap">
+insert into likes(content_id ,user_id ,profile_img) 
+values(#{Contentid}, #{Id},#{ProfileImg});
+</insert>
+
+<insert id="Insert_Content" parameterType="java.util.HashMap">
+insert into contentinfo(contentid, create_date) values(#{contentid} ,#{insert_date});
+</insert>
+
+<insert id="cm_insert_like" parameterType="java.util.HashMap">
+insert into commentslike(commentid, userid, like_status) values(#{CommentId} ,#{Id}, 'L');
+</insert>
+
+<insert id="insert_mention_rootcm" parameterType="java.util.HashMap">
+insert into mentions(commentid, mention_userid, mention_nickname, mention_type) 
+values(#{CommentId} ,#{MentionUserid} ,#{MentionNickname} , #{Type})
+</insert>
+
+<insert id="Insert_Userinfo" parameterType="java.util.HashMap">
+insert into userinfo(profile, userid, nickname) values(#{profile}, #{UserId}, #{nickname});
+</insert>
+<insert id="save_contentowner_info" parameterType="java.util.HashMap">
+insert into contentowner(contentid, owner_id, owner_text)
+values(#{contentId}, #{Id}, #{text})
+</insert>
+<insert id="insert_commentinfo" parameterType="String">
+insert into comments_info(comment_id) values(#{CommentId})
+</insert>
+
+<insert id="Insert_Comment" parameterType="java.util.HashMap">
+insert into comments(contentid, commentid, parentkey, uniquekey, comment_text, userid, insert_date)
+values(#{contentid} ,#{CommentId}, #{parnetkey}, #{uniqueKey} ,#{Comments}, #{UserId} ,#{insert_date})
+</insert>
+
+
+<select id ="ExistLike" parameterType="java.util.HashMap" resultType="boolean">
+SELECT EXISTS (
+  SELECT 1 
+  FROM commentslike 
+  WHERE userid = #{Id} 
+    AND commentid = #{CommentId}
+)
+</select>
+<select id ="ExistUser" parameterType="String" resultType="boolean">
+SELECT EXISTS (
+    SELECT 1
+    FROM userinfo 
+    WHERE userid = #{UserId}
+);
+</select>
+<select id="getOwner_text" parameterType="java.util.HashMap" resultType="String">
+select COALESCE(owner_text,'null') 
+from contentowner where owner_id=#{UserId} and contentid=#{ContentId}
+</select>
+
+<select id="islike" parameterType="java.util.HashMap" resultType="boolean">
+select COALESCE(owner_text,false) 
+from commentslike where userid=#{UserId} and commentid=#{commentid}
+</select>
+
+<select id="getmention_info" parameterType="String" resultType="java.util.HashMap">
+select commentid, mention_userid as userid, mention_nickname as nickname
+where commentid IN
+  <foreach item="id" collection="list" open="(" separator="," close=")">
+    #{id}
+  </foreach>
+
+</select>
+
+<select id="getroot_AllComment" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+SELECT 
+  cm.insert_date as cm_date,
+  cm.comment_text, 
+  cm.commentid, 
+  cm.userid,
+  ci.favorite AS cm_favorite,
+  ci.cm_cnt AS cm_cnt,
+  ui.profile as profile,	
+  ui.nickname as nickname,
+    COALESCE(
+  (SELECT like_status 
+   FROM commentslike 
+   WHERE userid =#{UserId}  
+     AND commentid = cm.commentid 
+   LIMIT 1),
+  'N'
+) as like_status
+FROM contentinfo c
+LEFT JOIN comments cm ON c.contentid = cm.contentid
+LEFT JOIN comments_info ci ON cm.commentid = ci.comment_id
+LEFT JOIN userinfo ui on ui.userid =cm.userid
+WHERE cm.commentid = cm.parentkey
+  AND cm.contentid = #{ContentId};
+</select>
+
+<select id ="ExistContent" parameterType="String" resultType="boolean">
+SELECT EXISTS (
+    SELECT 1
+    FROM ContentInfo 
+    WHERE contentId = #{ContentId}
+);
+</select>
+
+
+
+<delete id="delete_heart">
+  DELETE FROM likes
+  WHERE content_id = #{Contentid} AND user_id = #{Id}
+</delete>
+<delete id="cm_delete_like">
+  DELETE FROM commentslike
+  WHERE commentid= #{CommentId} AND userid = #{Id}
+</delete>
+
+
+<update id="increase_cm_like" parameterType="String">
+UPDATE comments_info
+SET favorite = favorite+ 1
+WHERE comment_id = #{CommentId};
+</update>
+
+<update id="decrease_cm_like" parameterType="String">
+UPDATE comments_info
+SET favorite = favorite- 1
+WHERE comment_id = #{CommentId};
+</update>
+
+<update id="increase_comments" parameterType="String">
+UPDATE contentinfo
+SET comment_cnt = comment_cnt + 1
+WHERE contentid = #{ContentId};
+</update>
+
+<update id="decrease_comments" parameterType="String">
+UPDATE contentinfo
+SET comment_cnt = comment_cnt - 1
+WHERE contentid = #{ContentId};
+</update>
+
+</mapper>

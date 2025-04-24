@@ -3,6 +3,7 @@ package com.AniVerse.Reaction.services;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.AniVerse.Reaction.mapper.Common_mapper;
@@ -33,6 +35,64 @@ public class Comment_Services {
 	
 	@Autowired
 	private  SqlSessionFactory sqlSessionFactory;
+	
+	@Transactional
+	@Async
+	public Map<String, Object>send_reply(Map<String, Object> info){
+		Map<String, Object> data= new HashMap<>();
+		Map<String, Object> getUniquekey_where= new HashMap<>();
+		Map<String, Object> comments= new HashMap<>();
+		Map<String, Object> mentions= new HashMap<>();
+		
+		boolean isExist_User= false;
+		String unique_key="";
+		isExist_User =common_mapper.ExistUser(info.get("MyId").toString());
+		getUniquekey_where.put("CommentId", info.get("CommentId").toString());
+		getUniquekey_where.put("UserId", info.get("MentionUser").toString());
+		getUniquekey_where.put("ContentId", info.get("contentid").toString());
+		
+		unique_key = common_mapper.Parent_Uniquekey(getUniquekey_where);
+		
+		LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+		String uniquekey = generation.Generation_uuid();
+		comments.put("contentid", info.get("contentid").toString());
+		comments.put("CommentId", info.get("CommentId").toString());
+		comments.put("parnetkey", unique_key);
+		comments.put("uniqueKey", uniquekey);
+		comments.put("Comments", info.get("Comments").toString());
+		comments.put("UserId", info.get("MyId").toString());
+		comments.put("insert_date", now);
+		
+		mentions.put("CommentId", info.get("CommentId").toString());
+		mentions.put("MentionUserid", info.get("MentionUser").toString());
+		mentions.put("MentionNickname", info.get("MentionNickname").toString());
+		mentions.put("Type", "reply");
+		
+		logger.info("저장된 유저 유무 : "+ isExist_User);
+		if(isExist_User) {
+
+			common_mapper.Insert_Comment(comments); //댓글의 parentkey, uniquekey 등등 데이터 저장(comments)
+			common_mapper.increase_comments(info.get("contentid").toString()); //게시물 전체 댓글 숫자 카운트 증가(contentinfo)
+			common_mapper.increase_content_cm(info.get("CommentId").toString());// 댓글 카운트 증가(comments_info)
+			common_mapper.insert_mention_rootcm(mentions);
+			
+		}
+		else {
+			Map<String , Object>user_info = new HashMap<>();
+			user_info.put("profile", info.get("MyProrile").toString());
+			user_info.put("UserId", info.get("MentionUser").toString());
+			user_info.put("nickname", info.get("MentionNickname").toString());
+			
+			common_mapper.Insert_Userinfo(user_info); //댓글 다는 사람 정보 저장(userinfo)
+			common_mapper.Insert_Comment(comments); //댓글의 parentkey, uniquekey 등등 데이터 저장(comments)
+			common_mapper.increase_comments(info.get("contentid").toString()); //게시물 전체 댓글 숫자 카운트 증가(contentinfo)
+			common_mapper.increase_content_cm(info.get("CommentId").toString());// 댓글 카운트 증가(comments_info)
+			common_mapper.insert_mention_rootcm(mentions);
+			
+		}
+		
+		return data;
+	}
 	
 	@Transactional
 	public Map<String, Object> Comments_like(Map<String, Object> info){
@@ -59,6 +119,8 @@ public class Comment_Services {
 		Map<String, Object> show_data= new HashMap<>();
 		Map<String, Object> total_data= new HashMap<>();
 		List<Map<String, Object>> root_Comments = new ArrayList<>();
+		List<String>commentids = new ArrayList<>();
+		List<Map<String, Object>> mentioninfos = new ArrayList<>();
 		String Owner_text="";
 		where_owner.put("UserId", UserId);
 		where_owner.put("ContentId", contentid);
@@ -74,7 +136,23 @@ public class Comment_Services {
 		} else {
 			total_data.put("owner_text", Owner_text);
 		}
-		
+         for(int i=0; i<root_Comments.size(); i++ ) {
+        	 commentids.add(root_Comments.get(i).get("commentid").toString());
+        	 
+         }
+         mentioninfos =common_mapper.getmention_info(commentids);
+         Map<String, List<Map<String, Object>>> mentionMap = new HashMap<>();
+         for (Map<String, Object> mention : mentioninfos) {
+             String cid = mention.get("commentid").toString();
+             mentionMap.computeIfAbsent(cid, k -> new ArrayList<>()).add(mention);
+         }
+
+         // 2. 댓글에 mentions 추가
+         for (Map<String, Object> comment : root_Comments) {
+             String cid = comment.get("commentid").toString();
+             List<Map<String, Object>> mentions = mentionMap.getOrDefault(cid, Collections.emptyList());
+             comment.put("mentions", mentions);
+         }
 		total_data.put("Comment_List", root_Comments);
 		logger.info("root 댓글들 정보 :" +root_Comments );
 		
@@ -104,6 +182,7 @@ public class Comment_Services {
 	public void Insert_Comment(Map<String, Object> info) {
 		boolean isExsitContent =false;
 		boolean isExsitUser =false;
+		logger.info("멘션 데이터 :" + info);
 		isExsitContent =common_mapper.ExistContent(info.get("contentid").toString());
 		isExsitUser = common_mapper.ExistUser(info.get("UserId").toString());
 		SqlSession sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH);
@@ -133,10 +212,25 @@ public class Comment_Services {
 		}
 		mapper.insert_commentinfo(info.get("CommentId").toString());
 		mapper.increase_comments(info.get("contentid").toString());
+		List<Map<String,Object>> mentions = new ArrayList<>();
+		mentions = (List<Map<String, Object>>) info.get("MentionInfos");
+		if(!mentions.isEmpty()) {
+			for(int i=0; i< mentions.size();i++) {
+				Map<String, Object> insert_mentions = new HashMap<>();
+				insert_mentions.put("CommentId", info.get("CommentId").toString());
+				insert_mentions.put("MentionUserid", mentions.get(i).get("id").toString());
+				insert_mentions.put("MentionNickname", mentions.get(i).get("nickname").toString());
+				insert_mentions.put("Type", "root");
+				mapper.insert_mention_rootcm(insert_mentions);
+				
+			}
+		}
+	
 		sqlSession.flushStatements(); // 쿼리전송
 		sqlSession.commit(); // 커밋
 		sqlSession.close(); // 닫기
 		sqlSession.clearCache(); // 캐시비우기
+		
 		}catch(Exception e) {
 			logger.error("에러 발생");
 		    sqlSession.rollback(); // ❗ 수동 롤백

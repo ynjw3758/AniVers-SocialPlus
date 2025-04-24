@@ -69,6 +69,16 @@ public class Controller {
 		return ResponseEntity.status(HttpStatus.OK).body(result);
 	}
 	
+	@PostMapping("comment/reply")
+	ResponseEntity<Map<String, Object>>send_reply(@RequestBody Map<String, Object> info){
+		 Map<String, Object> result = new HashMap<>();
+		 logger.info("대댓글 정보 :" + info);
+		 result = Comment.send_reply(info);
+		 
+		 
+		 return ResponseEntity.status(HttpStatus.OK).body(result);
+	}
+	
 	@PostMapping("/comment/Create")
 	ResponseEntity<Map<String, Object>>Create_Comment(@RequestBody Map<String, Object> info){
 		Map<String, Object> result= new HashMap<String, Object>();

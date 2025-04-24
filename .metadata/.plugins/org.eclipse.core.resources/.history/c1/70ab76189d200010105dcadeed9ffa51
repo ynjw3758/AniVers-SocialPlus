@@ -1,0 +1,181 @@
+package com.AniVerse.Reaction.services;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.session.ExecutorType;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.AniVerse.Reaction.mapper.Common_mapper;
+
+import jakarta.transaction.Transactional;
+
+@Service
+public class Comment_Services {
+	
+	
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
+	
+	@Autowired
+	private Common_mapper common_mapper;
+	
+	@Autowired
+	private Generation_Services generation;
+	
+	@Autowired
+	private  SqlSessionFactory sqlSessionFactory;
+	
+	@Transactional
+	public Map<String, Object> Comments_like(Map<String, Object> info){
+		Map<String, Object> data = new HashMap<>();
+		boolean isExist=false;
+		isExist = common_mapper.ExistLike(info);
+		 logger.info("어찌 된겨 ?" + isExist);
+		if(isExist == false) {
+			common_mapper.cm_insert_like(info);
+			common_mapper.increase_cm_like(info.get("CommentId").toString());
+		}
+		else {
+			common_mapper.cm_delete_like(info);
+			common_mapper.increase_cm_like(info.get("CommentId").toString());
+		}
+		return data;
+	}
+	
+	@Transactional
+	public Map<String, Object> Comment_list(String contentid , String UserId, String MyId){
+		Map<String, Object> data= new HashMap<>();
+		Map<String ,Object> where_owner = new HashMap<>();
+		Map<String ,Object> where_comments = new HashMap<>();
+		Map<String, Object> show_data= new HashMap<>();
+		Map<String, Object> total_data= new HashMap<>();
+		List<Map<String, Object>> root_Comments = new ArrayList<>();
+		String Owner_text="";
+		where_owner.put("UserId", UserId);
+		where_owner.put("ContentId", contentid);
+		try {
+			where_comments.put("UserId", MyId);
+			where_comments.put("ContentId", contentid);
+			logger.info("where :" +where_owner );
+		Owner_text = common_mapper.getOwner_text(where_owner);
+		root_Comments = common_mapper.getroot_AllComment(where_comments);
+		logger.info("댓글 소유자 소개 글 :" +Owner_text );
+		if (Owner_text == null || Owner_text.trim().equals("") || Owner_text.equals("null")) {
+		    total_data.put("owner_text", "null");
+		} else {
+			total_data.put("owner_text", Owner_text);
+		}
+		
+		total_data.put("Comment_List", root_Comments);
+		logger.info("root 댓글들 정보 :" +root_Comments );
+		
+	    data.put("code", 200);
+	    data.put("msg", "댓글 조회 성공");
+	    data.put("data", total_data);
+		}catch(Exception e) {
+			logger.error("쿼리 조회 중 에러 발생 : " + e);
+		    data.put("code", 500);
+		    data.put("msg", "댓글 조회 중 오류가 발생했습니다.");
+		    data.put("error", "댓글 조회 실패"); // 개발 중엔 포함, 운영 배포 시엔 제외 고려
+		}
+		
+		return data;
+	}
+	
+	@Transactional
+	public Map<String, Object> save_owner(Map<String, Object> info){
+		Map<String, Object> result= new HashMap<>();
+		common_mapper.save_contentowner_info(info);
+		result.put("code", 200);
+		result.put("msg", "success");
+		
+		return result;
+	}
+	
+	public void Insert_Comment(Map<String, Object> info) {
+		boolean isExsitContent =false;
+		boolean isExsitUser =false;
+		logger.info("멘션 데이터 :" + info);
+		isExsitContent =common_mapper.ExistContent(info.get("contentid").toString());
+		isExsitUser = common_mapper.ExistUser(info.get("UserId").toString());
+		SqlSession sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH);
+		Common_mapper mapper = sqlSession.getMapper(Common_mapper.class);
+		LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+		info.put("insert_date", now);
+		try {
+		if(!isExsitContent && !isExsitUser) {
+			logger.info("둘다 없다");
+			mapper.Insert_Content(info);
+			mapper.Insert_Userinfo(info);
+			mapper.Insert_Comment(info);
+		}
+		else if(isExsitContent && !isExsitUser) {
+			logger.info("신규 유저 댓글");
+			mapper.Insert_Userinfo(info);
+			mapper.Insert_Comment(info);
+		}
+		else if(!isExsitContent && isExsitUser) {
+			logger.info("기존 고객");
+			mapper.Insert_Content(info);
+			mapper.Insert_Comment(info);
+		}
+		else if(isExsitContent && isExsitUser) {
+			logger.info("둘다 존재");
+			mapper.Insert_Comment(info);
+		}
+		mapper.insert_commentinfo(info.get("CommentId").toString());
+		mapper.increase_comments(info.get("contentid").toString());
+	
+		sqlSession.flushStatements(); // 쿼리전송
+		sqlSession.commit(); // 커밋
+		sqlSession.close(); // 닫기
+		sqlSession.clearCache(); // 캐시비우기
+		}catch(Exception e) {
+			logger.error("에러 발생");
+		    sqlSession.rollback(); // ❗ 수동 롤백
+		    throw e;
+		}finally {
+			 sqlSession.close();
+		}
+	}
+	
+	public Map<String, Object> Create_Comment(Map<String, Object> info) {
+		Map<String, Object> result_data =new HashMap<String, Object>();
+		logger.info("댓글 저장");
+		String commentid = generation.Generation_uuid();
+		String uniquekey = generation.Generation_uuid();
+		info.put("CommentId", commentid);
+		info.put("parnetkey", commentid);
+		info.put("uniqueKey", uniquekey);
+		logger.info("요청 데이터 정리 :" + info);
+		Insert_Comment(info); //댓글 저장하기
+		
+		result_data.put("code", 200);
+		result_data.put("msg", "success");
+		result_data.put("data", "null");
+		
+		return result_data;
+	}
+	
+	public Map<String, Object> Edit_Comment() {
+		Map<String, Object> result_data =new HashMap<String, Object>();
+		
+		return result_data;
+	}
+	
+	public Map<String, Object> Delete_Comment() {
+		Map<String, Object> result_data =new HashMap<String, Object>();
+		
+		return result_data;
+	}
+
+}
